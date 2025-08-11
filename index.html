@@ -34,6 +34,8 @@
                         'fade-in': 'fadeIn 0.5s ease-in-out',
                         'slide-up': 'slideUp 0.5s ease-out',
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 1.5s infinite alternate',
+                        'gradient-text': 'gradient-text 5s ease infinite',
                     },
                     keyframes: {
                         fadeIn: {
@@ -43,6 +45,26 @@
                         slideUp: {
                             '0%': { transform: 'translateY(20px)', opacity: '0' },
                             '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        glow: {
+                            '0%, 100%': {
+                                'text-shadow': '0 0 5px #fff, 0 0 10px #0ea5e9, 0 0 15px #3b82f6',
+                                'color': '#0ea5e9',
+                            },
+                            '50%': {
+                                'text-shadow': '0 0 10px #fff, 0 0 20px #3b82f6, 0 0 30px #1d4ed8',
+                                'color': '#3b82f6',
+                            }
+                        },
+                        'gradient-text': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center',
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center',
+                            }
                         }
                     }
                 }
@@ -85,9 +107,17 @@
         #toast {
             transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
+        .rahathossain-copyright {
+            background-image: linear-gradient(to right, #0ea5e9, #6366f1, #0ea5e9);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            animation: gradient-text 5s ease infinite;
+        }
     </style>
 </head>
-<body class="antialiased bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+<body class="antialiased bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex flex-col">
 
     <!-- Login View -->
     <div id="login-view" class="flex items-center justify-center min-h-screen">
@@ -108,7 +138,7 @@
     </div>
 
     <!-- Dashboard View -->
-    <div id="dashboard-view" class="hidden">
+    <div id="dashboard-view" class="hidden flex-grow flex flex-col">
         <!-- Header -->
         <header class="bg-white shadow-sm sticky top-0 z-50">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -134,7 +164,7 @@
         </header>
 
         <!-- Main Content -->
-        <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <main class="container mx-auto p-4 sm:p-6 lg:p-8 flex-grow">
             <!-- Stats and Notice Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 <!-- Stats Cards -->
@@ -267,6 +297,13 @@
                 </div>
             </section>
         </main>
+        
+        <!-- Footer with Copyright -->
+        <footer class="bg-gray-100 text-gray-500 text-center py-4 mt-8 shadow-inner">
+            <div class="container mx-auto">
+                <p class="text-sm">© <span class="rahathossain-copyright">RAHAT HOSSAIN</span></p>
+            </div>
+        </footer>
     </div>
 
     <!-- Toast Notification -->
@@ -498,17 +535,14 @@
         // --- Data Saving ---
         saveLinkBtn.addEventListener('click', async () => {
             const link = driveLinkInput.value.trim();
-            if (!link) {
-                showToast('অনুগ্রহ করে একটি লিংক দিন।', 'error');
-                return;
-            }
-
+            // Allow saving empty string for link
+            const docRef = doc(db, "settings", "driveLink");
+            
             const button = saveLinkBtn;
             const originalText = button.innerHTML;
             button.disabled = true;
             button.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> <span>সেভ হচ্ছে...</span>`;
 
-            const docRef = doc(db, "settings", "driveLink");
             try {
                 await setDoc(docRef, { url: link });
                 showToast('লিংক সফলভাবে সেভ করা হয়েছে!');

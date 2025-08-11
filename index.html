@@ -415,7 +415,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-        import { getFirestore, collection, doc, onSnapshot, setDoc, getDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, onSnapshot, setDoc, getDoc, query, where, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -604,6 +604,7 @@
             endOfDay.setHours(23, 59, 59, 999);
             
             const statsCollection = collection(db, 'downloadStats');
+            // FIX: Pass Date objects directly to where clause
             const q = query(statsCollection, where('firstDownload', '>=', startOfDay.toISOString()), where('firstDownload', '<=', endOfDay.toISOString()));
             
             unsubscribeStats = onSnapshot(q, (snapshot) => {
@@ -798,6 +799,7 @@
             endOfDay.setHours(23, 59, 59, 999);
 
             try {
+                // FIX: Use Date objects directly for the query
                 const q = query(collection(db, 'downloadStats'), where('firstDownload', '>=', startOfDay.toISOString()), where('firstDownload', '<=', endOfDay.toISOString()));
                 const querySnapshot = await getDocs(q);
                 

@@ -115,6 +115,38 @@
             font-weight: 700;
             animation: gradient-text 5s ease infinite;
         }
+        .date-navigator button {
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .date-navigator button:hover {
+            transform: scale(1.1);
+        }
+
+        /* Print styles */
+        @media print {
+            body > *:not(.printable) {
+                display: none;
+            }
+            .printable {
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+            }
+            .printable h1, .printable h2, .printable p {
+                color: #000 !important;
+            }
+            .printable table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .printable th, .printable td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+            }
+        }
     </style>
 </head>
 <body class="antialiased bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex flex-col">
@@ -174,7 +206,7 @@
                             <i class="fas fa-download text-2xl"></i>
                         </div>
                         <div class="ml-4">
-                            <h3 class="text-gray-500 font-medium">মোট ডাউনলোড</h3>
+                            <h3 class="text-gray-500 font-medium">মোট ডাউনলোড (সর্বকালীন)</h3>
                             <p id="total-downloads" class="text-3xl font-bold text-gray-800">0</p>
                         </div>
                     </div>
@@ -184,7 +216,7 @@
                             <i class="fas fa-users text-2xl"></i>
                         </div>
                         <div class="ml-4">
-                            <h3 class="text-gray-500 font-medium">অনন্য ব্যবহারকারী</h3>
+                            <h3 class="text-gray-500 font-medium">অনন্য ব্যবহারকারী (সর্বকালীন)</h3>
                             <p id="unique-users" class="text-3xl font-bold text-gray-800">0</p>
                         </div>
                     </div>
@@ -260,16 +292,37 @@
 
             <!-- Data Table Section -->
             <section class="bg-white rounded-xl shadow-sm overflow-hidden animate__animated animate__fadeIn">
-                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
-                    <div>
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
                         <h2 class="text-xl font-bold text-gray-800 flex items-center">
                             <i class="fas fa-table text-blue-500 mr-2"></i>
                             ডাউনলোড পরিসংখ্যান
                         </h2>
-                        <p class="text-gray-500 mt-1">যারা সিলেবাস ডাউনলোড করেছে তাদের তালিকা</p>
+                        <div class="flex items-center space-x-2">
+                            <button id="print-btn" class="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
+                                <i class="fas fa-print mr-2"></i>
+                                প্রিন্ট করুন
+                            </button>
+                            <button id="delete-daily-btn" class="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
+                                <i class="fas fa-trash-alt mr-2"></i>
+                                আজকের ডেটা মুছুন
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- Date Navigation -->
+                    <div class="flex items-center justify-center gap-4 mb-4 date-navigator">
+                        <button id="prev-day-btn" class="p-2 text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <input type="date" id="date-picker" class="px-4 py-2 border border-gray-300 rounded-lg text-center font-semibold text-gray-700">
+                        <button id="next-day-btn" class="p-2 text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
                     <div class="relative">
-                        <input type="text" id="search-input" class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="খুঁজুন...">
+                        <input type="text" id="search-input" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="খুঁজুন...">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                     </div>
                 </div>
@@ -280,14 +333,15 @@
                                 <th class="px-6 py-3">#</th>
                                 <th class="px-6 py-3">নাম</th>
                                 <th class="px-6 py-3">রোল</th>
-                                <th class="px-6 py-3">প্রথম ডাউনলোড</th>
+                                <th class="px-6 py-3">সময়</th>
                                 <th class="px-6 py-3 text-center">ডাউনলোড সংখ্যা</th>
+                                <th class="px-6 py-3 text-center">অ্যাকশন</th>
                             </tr>
                         </thead>
                         <tbody id="stats-table-body" class="divide-y divide-gray-200">
                             <!-- Data will be injected here by JS -->
                             <tr>
-                                <td colspan="5" class="text-center py-10">
+                                <td colspan="6" class="text-center py-10">
                                     <i class="fas fa-spinner fa-spin fa-2x text-gray-400"></i>
                                     <p class="mt-2">ডেটা লোড হচ্ছে...</p>
                                 </td>
@@ -306,6 +360,50 @@
         </footer>
     </div>
 
+    <!-- Print Confirmation Modal -->
+    <div id="print-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm z-10 animate__animated animate__zoomIn">
+            <div class="p-6 text-center">
+                <i class="fas fa-print text-5xl text-blue-500 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">আপনি কি প্রিন্ট করতে চান?</h3>
+                <p class="text-gray-600 mb-6">কোন ডেটা প্রিন্ট করতে চান তা নির্বাচন করুন।</p>
+                <div class="flex flex-col space-y-3">
+                    <button id="print-daily-btn" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                        আজকের ডেটা প্রিন্ট
+                    </button>
+                    <button id="print-all-btn" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                        সকল ডেটা প্রিন্ট
+                    </button>
+                    <button id="print-cancel-btn" class="w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors">
+                        বাতিল করুন
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm z-10 animate__animated animate__zoomIn">
+            <div class="p-6 text-center">
+                <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4 animate__animated animate__bounceIn"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">আপনি নিশ্চিত?</h3>
+                <p id="delete-message" class="text-gray-600 mb-6">এই ডেটা মুছে দিলে তা আর ফেরত আনা যাবে না।</p>
+                <div class="flex space-x-3">
+                    <button id="delete-confirm-btn" class="w-full bg-red-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-600 transition-colors">
+                        ডিলিট করুন
+                    </button>
+                    <button id="delete-cancel-btn" class="w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors">
+                        বাতিল করুন
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl flex items-center transform translate-y-10 opacity-0 z-50">
         <i id="toast-icon" class="fas fa-check-circle mr-3"></i>
@@ -317,7 +415,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-        import { getFirestore, collection, doc, onSnapshot, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, onSnapshot, setDoc, getDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -363,9 +461,25 @@
         const toast = document.getElementById('toast');
         const toastIcon = document.getElementById('toast-icon');
         const toastMessage = document.getElementById('toast-message');
-        
+
+        const datePicker = document.getElementById('date-picker');
+        const prevDayBtn = document.getElementById('prev-day-btn');
+        const nextDayBtn = document.getElementById('next-day-btn');
+        const printBtn = document.getElementById('print-btn');
+        const deleteDailyBtn = document.getElementById('delete-daily-btn');
+        const printModal = document.getElementById('print-modal');
+        const printDailyBtn = document.getElementById('print-daily-btn');
+        const printAllBtn = document.getElementById('print-all-btn');
+        const printCancelBtn = document.getElementById('print-cancel-btn');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteConfirmBtn = document.getElementById('delete-confirm-btn');
+        const deleteCancelBtn = document.getElementById('delete-cancel-btn');
+        const deleteMessage = document.getElementById('delete-message');
+
         let unsubscribeStats = null; // To hold the listener unsub function
         let statsData = []; // To hold all stats data for searching
+        let currentDeleteDocId = null; // To hold the doc ID for deletion
+        let currentViewDate = new Date(); // State for the selected date
 
         // --- Authentication Logic ---
         onAuthStateChanged(auth, (user) => {
@@ -411,39 +525,58 @@
         function setupDashboard(user) {
             userNameEl.textContent = user.displayName;
             userEmailEl.textContent = user.email;
-            fetchDownloadStats();
+            
+            // Set initial date picker value
+            datePicker.value = formatDate(currentViewDate);
+            
+            fetchDashboardStats(); // Fetch all-time stats
+            fetchDownloadStatsForDate(currentViewDate); // Fetch today's stats
             fetchDriveLink();
             fetchNotice();
         }
 
+        // --- Date Navigation ---
+        datePicker.addEventListener('change', (e) => {
+            currentViewDate = new Date(e.target.value);
+            fetchDownloadStatsForDate(currentViewDate);
+        });
+
+        prevDayBtn.addEventListener('click', () => {
+            currentViewDate.setDate(currentViewDate.getDate() - 1);
+            datePicker.value = formatDate(currentViewDate);
+            fetchDownloadStatsForDate(currentViewDate);
+        });
+
+        nextDayBtn.addEventListener('click', () => {
+            currentViewDate.setDate(currentViewDate.getDate() + 1);
+            datePicker.value = formatDate(currentViewDate);
+            fetchDownloadStatsForDate(currentViewDate);
+        });
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         // --- Data Fetching ---
-        function fetchDownloadStats() {
+        function fetchDashboardStats() {
+            // Fetch total stats (all time)
             const statsCollection = collection(db, 'downloadStats');
-            const q = query(statsCollection, orderBy('firstDownload', 'desc'));
-            
-            unsubscribeStats = onSnapshot(q, (snapshot) => {
-                if (snapshot.empty) {
-                    statsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">এখনো কোনো ডেটা পাওয়া যায়নি।</td></tr>`;
-                    totalDownloadsEl.textContent = '0';
-                    uniqueUsersEl.textContent = '0';
-                    lastDownloadEl.textContent = 'কোনো ডেটা নেই';
-                    return;
-                }
-                
+            onSnapshot(statsCollection, (snapshot) => {
                 let totalCount = 0;
-                statsData = snapshot.docs.map(doc => {
+                let uniqueUsers = snapshot.size;
+                let lastDownload = 'কোনো ডেটা নেই';
+                
+                snapshot.forEach(doc => {
                     const data = doc.data();
-                    totalCount += data.downloadCount || 1; // Sum up download counts
-                    return { id: doc.id, ...data };
+                    totalCount += data.downloadCount || 1;
                 });
-                
-                // Update stats cards
-                totalDownloadsEl.textContent = totalCount.toLocaleString('bn-BD');
-                uniqueUsersEl.textContent = snapshot.size.toLocaleString('bn-BD');
-                
-                // Update last download time
-                if (statsData.length > 0) {
-                    const lastDownload = new Date(statsData[0].firstDownload).toLocaleString('bn-BD', {
+
+                if (snapshot.docs.length > 0) {
+                    const sortedDocs = snapshot.docs.sort((a, b) => new Date(b.data().firstDownload) - new Date(a.data().firstDownload));
+                    lastDownload = new Date(sortedDocs[0].data().firstDownload).toLocaleString('bn-BD', {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric',
@@ -451,13 +584,40 @@
                         minute: 'numeric',
                         hour12: true
                     });
-                    lastDownloadEl.textContent = lastDownload;
                 }
                 
+                totalDownloadsEl.textContent = totalCount.toLocaleString('bn-BD');
+                uniqueUsersEl.textContent = uniqueUsers.toLocaleString('bn-BD');
+                lastDownloadEl.textContent = lastDownload;
+            });
+        }
+
+        function fetchDownloadStatsForDate(date) {
+            if (unsubscribeStats) {
+                unsubscribeStats(); // Unsubscribe from previous listener
+            }
+
+            const startOfDay = new Date(date);
+            startOfDay.setHours(0, 0, 0, 0);
+            
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+            
+            const statsCollection = collection(db, 'downloadStats');
+            const q = query(statsCollection, where('firstDownload', '>=', startOfDay.toISOString()), where('firstDownload', '<=', endOfDay.toISOString()));
+            
+            unsubscribeStats = onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    statsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">এই তারিখে কোনো ডেটা পাওয়া যায়নি।</td></tr>`;
+                    statsData = [];
+                    return;
+                }
+                
+                statsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderTable(statsData);
             }, (error) => {
-                console.error("Error fetching stats:", error);
-                statsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-red-500">ডেটা লোড করতে সমস্যা হয়েছে।</td></tr>`;
+                console.error("Error fetching daily stats:", error);
+                statsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-red-500">ডেটা লোড করতে সমস্যা হয়েছে।</td></tr>`;
             });
         }
 
@@ -465,7 +625,7 @@
             statsTableBody.innerHTML = ''; // Clear previous data
             
             if (data.length === 0) {
-                statsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">কোনো ফলাফল পাওয়া যায়নি।</td></tr>`;
+                statsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">কোনো ফলাফল পাওয়া যায়নি।</td></tr>`;
                 return;
             }
             
@@ -473,10 +633,7 @@
                 const row = document.createElement('tr');
                 row.className = 'table-row-hover';
                 
-                const downloadTime = new Date(stat.firstDownload).toLocaleString('bn-BD', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
+                const downloadTime = new Date(stat.firstDownload).toLocaleTimeString('bn-BD', {
                     hour: 'numeric',
                     minute: 'numeric',
                     hour12: true
@@ -488,6 +645,11 @@
                     <td class="px-6 py-4">${stat.roll}</td>
                     <td class="px-6 py-4">${downloadTime}</td>
                     <td class="px-6 py-4 text-center font-bold text-blue-600">${(stat.downloadCount || 1).toLocaleString('bn-BD')}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button class="text-red-500 hover:text-red-700 transition-colors" onclick="showDeleteModal('${stat.id}', '${stat.name}')">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
                 `;
                 statsTableBody.appendChild(row);
             });
@@ -591,6 +753,145 @@
             }
         });
 
+        // --- Delete Functions ---
+        window.showDeleteModal = (docId, name) => {
+            currentDeleteDocId = docId;
+            deleteMessage.innerHTML = `আপনি কি <span class="font-bold text-gray-800">` + name + `</span> এর ডেটা মুছে ফেলতে চান?`;
+            deleteModal.classList.remove('hidden');
+        };
+
+        deleteDailyBtn.addEventListener('click', () => {
+            currentDeleteDocId = 'daily';
+            deleteMessage.innerHTML = `আপনি কি এই তারিখের <span class="font-bold text-red-500">সকল</span> ডেটা মুছে ফেলতে চান?`;
+            deleteModal.classList.remove('hidden');
+        });
+
+        deleteConfirmBtn.addEventListener('click', async () => {
+            if (currentDeleteDocId === 'daily') {
+                await deleteDailyData();
+            } else {
+                await deleteSingleDocument(currentDeleteDocId);
+            }
+            deleteModal.classList.add('hidden');
+        });
+
+        deleteCancelBtn.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+            currentDeleteDocId = null;
+        });
+
+        async function deleteSingleDocument(docId) {
+            try {
+                await deleteDoc(doc(db, 'downloadStats', docId));
+                showToast('ডেটা সফলভাবে মুছে ফেলা হয়েছে!', 'success');
+            } catch (error) {
+                console.error("Error deleting document:", error);
+                showToast('ডেটা মুছে ফেলতে সমস্যা হয়েছে।', 'error');
+            }
+        }
+
+        async function deleteDailyData() {
+            const startOfDay = new Date(currentViewDate);
+            startOfDay.setHours(0, 0, 0, 0);
+            
+            const endOfDay = new Date(currentViewDate);
+            endOfDay.setHours(23, 59, 59, 999);
+
+            try {
+                const q = query(collection(db, 'downloadStats'), where('firstDownload', '>=', startOfDay.toISOString()), where('firstDownload', '<=', endOfDay.toISOString()));
+                const querySnapshot = await getDocs(q);
+                
+                const deletePromises = [];
+                querySnapshot.forEach(doc => {
+                    deletePromises.push(deleteDoc(doc.ref));
+                });
+                await Promise.all(deletePromises);
+                showToast('এই দিনের সমস্ত ডেটা সফলভাবে মুছে ফেলা হয়েছে!', 'success');
+            } catch (error) {
+                console.error("Error deleting daily data:", error);
+                showToast('এই দিনের ডেটা মুছে ফেলতে সমস্যা হয়েছে।', 'error');
+            }
+        }
+
+        // --- Print Functions ---
+        printBtn.addEventListener('click', () => {
+            printModal.classList.remove('hidden');
+        });
+
+        printCancelBtn.addEventListener('click', () => {
+            printModal.classList.add('hidden');
+        });
+
+        printDailyBtn.addEventListener('click', () => {
+            printData(statsData, `ডাউনলোড পরিসংখ্যান (${formatDate(currentViewDate)})`);
+            printModal.classList.add('hidden');
+        });
+
+        printAllBtn.addEventListener('click', async () => {
+            const statsCollection = collection(db, 'downloadStats');
+            const querySnapshot = await getDocs(statsCollection);
+            const allData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            printData(allData, 'সকল ডাউনলোড পরিসংখ্যান');
+            printModal.classList.add('hidden');
+        });
+
+        function printData(data, title) {
+            const printWindow = window.open('', '_blank');
+            const tableRows = data.map((stat, index) => {
+                const downloadTime = new Date(stat.firstDownload).toLocaleString('bn-BD', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true
+                });
+                return `
+                    <tr>
+                        <td>${(index + 1).toLocaleString('bn-BD')}</td>
+                        <td>${stat.name}</td>
+                        <td>${stat.roll}</td>
+                        <td>${downloadTime}</td>
+                        <td style="text-align:center;">${(stat.downloadCount || 1).toLocaleString('bn-BD')}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>${title}</title>
+                    <style>
+                        body { font-family: 'Noto Sans Bengali', sans-serif; margin: 20px; }
+                        h1 { text-align: center; margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${title}</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>নাম</th>
+                                <th>রোল</th>
+                                <th>সময়</th>
+                                <th style="text-align:center;">ডাউনলোড সংখ্যা</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
         // --- Search Functionality ---
         searchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
@@ -629,4 +930,4 @@
 
     </script>
 </body>
-</html>
+    </html>
